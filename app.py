@@ -1,13 +1,12 @@
-from flask import Flask, render_template
-from data_tools import get_profile_from_json_by_id, get_profile_goals, get_free_profile_hours, \
-    WEEKDAYS, write_lesson_to_json, get_goals_for_request_form, read_json, write_request_to_json, \
-    ICONS
+from flask import Flask, render_template, request
+from data_tools import get_free_profile_hours, WEEKDAYS, ICONS
 from forms import RequestForm, BookingForm
 from environs import Env
 from flask_migrate import Migrate
 from sqlalchemy import CheckConstraint
 from flask_sqlalchemy import SQLAlchemy
 import random
+from sqlalchemy.orm.attributes import flag_modified
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///test.db"
@@ -96,54 +95,60 @@ def render_profile(profile_id):
     return render_template('profile.html', profile=profile, goals=goals, free_hours=free_hours, weekday=WEEKDAYS)
 
 
-@app.route('/request/')
+@app.route('/request/', methods=["GET", "POST"])
 def render_request():
     form = RequestForm()
-    goals = get_goals_for_request_form(GOALS_JSON_PATH)
-    form.goal.choices = goals
-    form.goal.default = goals[0][0]
-    form.process()
+    goals = db.session.query(Goal).all()
+    choices = [(str(goal.id), goal.description) for goal in goals]
+    form.goal.choices = choices
+    form.goal.data = choices[0][0]
+    if request.method == "POST":
+        if form.validate_on_submit():
+            goal_id = form.goal.data
+            goal = db.session.query(Goal).get_or_404(goal_id)
+            time = form.time.data
+            name = form.name.data
+            phone = form.phone.data
+            lesson_request = Request(goal=goal,
+                                     goal_id=goal_id,
+                                     time=time,
+                                     name=name,
+                                     phone=phone)
+            db.session.add(lesson_request)
+            db.session.commit()
+            return render_template('request_done.html', goal=goal, time=time, name=name, phone=phone)
     return render_template('request.html', form=form)
 
 
-@app.route('/request_done/', methods=["POST"])
-def render_request_done():
-    goals = get_goals_for_request_form(GOALS_JSON_PATH)
-    form = RequestForm()
-    form.goal.choices = goals
-    if form.validate():
-        goals = read_json(GOALS_JSON_PATH)
-        goal = form.goal.data
-        time = form.time.data
-        name = form.name.data
-        phone = form.phone.data
-        write_request_to_json(goal, time, name, phone, REQUESTS_JSON_PATH)
-        return render_template('request_done.html', goal=goals[goal], time=time, name=name, phone=phone)
-    return 'Данные не получены '
-
-
-@app.route('/booking/<int:profile_id>/<weekday>/<time>/')
+@app.route('/booking/<int:profile_id>/<weekday>/<time>/', methods=["GET", "POST"])
 def render_booking(profile_id, weekday, time):
-    profile = get_profile_from_json_by_id(profile_id, TEACHERS_JSON_PATH)
+    profile = db.session.query(Teacher).get_or_404(profile_id)
     form = BookingForm()
     form.weekday.default = weekday
     form.time.default = time
     form.teacher.default = profile_id
-    return render_template('booking.html', profile=profile, weekday=WEEKDAYS[weekday], form=form)
-
-
-@app.route('/booking_done/', methods=["POST"])
-def render_booking_done():
-    form = BookingForm()
-    if form.validate():
-        name = form.name.data
-        time = form.time.data
-        weekday = form.weekday.data
-        teacher_id = form.teacher.data
-        phone = form.phone.data
-        write_lesson_to_json(teacher_id, weekday, time, TEACHERS_JSON_PATH)
-        return render_template('booking_done.html', name=name, time=time, weekday=WEEKDAYS[weekday], phone=phone)
-    return 'Данные не получены '
+    if request.method == "POST":
+        if form.validate_on_submit():
+            name = form.name.data
+            time = form.time.data
+            weekday = form.weekday.data
+            teacher_id = form.teacher.data
+            phone = form.phone.data
+            teacher = db.session.query(Teacher).get_or_404(profile_id)
+            booking = Booking(weekday=weekday,
+                              time=time,
+                              teacher=teacher,
+                              teacher_id=teacher_id,
+                              name=name,
+                              phone=phone)
+            db.session.add(booking)
+            schedule = teacher.free
+            schedule[weekday][time] = False
+            teacher.free = schedule
+            flag_modified(teacher, "free")
+            db.session.commit()
+            return render_template('booking_done.html', weekday=WEEKDAYS[weekday], time=time, name=name, phone=phone)
+    return render_template('booking.html', profile=profile, weekday=WEEKDAYS[weekday], time=time, form=form)
 
 
 if __name__ == '__main__':

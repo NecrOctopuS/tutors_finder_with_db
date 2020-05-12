@@ -3,7 +3,7 @@
   <main class="container mt-3">
     <div class="row mt-5">
       <div class="col-10 col-md-6 offset-1 offset-md-3 mb-3">
-        <form action="{{ url_for('render_booking_done') }}" class="card mb-3" method="POST">
+        <form action="{{ request.path }}" class="card mb-3" method="POST">
           {{ form.csrf_token }}
           <div class="card-body text-center pt-5">
             <img src="{{ profile.picture }}" class="mb-3" width="95" alt="{{ profile.name }}">
