@@ -126,3 +126,4 @@ dmypy.json
 *.pickle
 *.log
 111.py
+test.db
