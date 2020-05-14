@@ -8,19 +8,17 @@ from flask_sqlalchemy import SQLAlchemy
 import random
 from sqlalchemy.orm.attributes import flag_modified
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///test.db"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 env = Env()
 env.read_env()
 
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = env.str("DATABASE_URL", "sqlite:///test.db")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = env.str('SECRET_KEY', 'my-super-secret-phrase-I-dont-tell-this-to-nobody')
 
-GOALS_JSON_PATH = env.str('GOALS_JSON_PATH', 'goals.json')
-TEACHERS_JSON_PATH = env.str('TEACHERS_JSON_PATH', 'teachers.json')
-REQUESTS_JSON_PATH = env.str('REQUESTS_JSON_PATH', 'request.json')
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 PROFILE_NUMBERS_PER_MAIN_PAGE = int(env.str('PROFILE_NUMBERS_PER_MAIN_PAGE', '6'))
 
 teachers_goals_association = db.Table(
