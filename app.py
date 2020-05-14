@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from data_tools import get_free_profile_hours, WEEKDAYS, ICONS
+from data_tools import get_free_profile_hours, WEEKDAYS
 from forms import RequestForm, BookingForm
 from environs import Env
 from flask_migrate import Migrate
@@ -75,15 +75,14 @@ class Request(db.Model):
 def render_main():
     profiles = random.sample(db.session.query(Teacher).all(), PROFILE_NUMBERS_PER_MAIN_PAGE)
     goals = db.session.query(Goal).all()
-    return render_template('index.html', profiles=profiles, goals=goals, icons=ICONS)
+    return render_template('index.html', profiles=profiles, goals=goals)
 
 
 @app.route('/goals/<goal_slug>/')
 def render_goal(goal_slug):
     goal = db.session.query(Goal).filter(Goal.slug == goal_slug).one()
     profiles = db.session.query(Teacher).filter(Teacher.goals.any(id=goal.id)).order_by(Teacher.rating.desc()).all()
-    icon = ICONS[goal.slug]
-    return render_template('goal.html', goal=goal, profiles=profiles, icon=icon)
+    return render_template('goal.html', goal=goal, profiles=profiles)
 
 
 @app.route('/profiles/<int:profile_id>/')
