@@ -49,6 +49,7 @@ class Goal(db.Model):
     slug = db.Column(db.String(200))
     description = db.Column(db.String(200))
     teachers = db.relationship("Teacher", secondary=teachers_goals_association, back_populates="goals")
+    icon = db.Column(db.String(30))
 
 
 class Booking(db.Model):
