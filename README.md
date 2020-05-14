@@ -1,7 +1,7 @@
 # Поиск репетиторов
 
 Сайт на Flask.
-Пример можно посмотреть на [Heroku](https://demo-tutors-finder.herokuapp.com/).
+Пример можно посмотреть на [Heroku](https://demo-tutors-finder-with-db.herokuapp.com/).
 
 ## Запуск
 
@@ -18,9 +18,6 @@
 В файле `.env` или в настройках окружения создайте следующие переменные:
 ```
 SECRET_KEY='my-super-secret-phrase-I-dont-tell-this-to-nobody' #Секретный ключ проекта
-GOALS_JSON_PATH='goals.json' #Путь до файла JSON, где будут хранятся данные целей
-TEACHERS_JSON_PATH='teachers.json' #Путь до файла JSON, где будут хранятся данные преподователей
-REQUESTS_JSON_PATH='request.json' #Путь до файла JSON, где будут хранятся заявки на подбор преподователей
 PROFILE_NUMBERS_PER_MAIN_PAGE=6 #Количество карточек на главной странице
 ```
 
@@ -28,8 +25,8 @@ PROFILE_NUMBERS_PER_MAIN_PAGE=6 #Количество карточек на гл
 ## Особенности
 
 Изначальные данные находятся в файле `data.py`.
-Их можно распарсить на соответствующие `JSON` запустив скрипт командой `python3 first_run.py`.
+Их можно записать в базу данных запустив скрипт командой `python3 first_run.py`.
 
 ## Цели проекта
 
-Код написан в учебных целях — это проектное задание третьей недели в курсе по Flask на сайте [Stepik](https://stepik.org/).
+Код написан в учебных целях — это проектное задание четвертой недели в курсе по Flask на сайте [Stepik](https://stepik.org/).
